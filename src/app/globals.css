@@ -1,0 +1,1705 @@
+@import "tailwindcss" source(none);
+
+/*
+  =========================================================
+  デザインの仕様書は docs/art-direction-v2.md（v1 からの差分）と docs/art-direction.md（v1）
+  =========================================================
+  ・トークン（色・書体・文字サイズ・余白・幅）は :root の CSS 変数。
+    Tailwind v4 の @theme にも同じ名前で渡してある（色だけ。Tailwind の既定の
+    white / black / gray / 角丸 / 影 は使わないので消している）。
+  ・この CSS は読み順どおり: トークン → 基本 → 共通部品 → ヘッダー/フッター → 各セクション → 詳細ページ。
+  ・ブレークポイントは モバイル <768 / タブレット 768–1023 / PC ≥1024（ヘッダーだけ 640 で切り替え）。
+    モバイル優先で書き、768 と 1024 で上書きする。
+
+  【幅の3段階（AD v2 §1）】
+    visual  … 写真・HERO・ヘッダー/フッター。外枠 .container（最大 1120px）。
+    content … 罫線・見出し・索引。visual の cols 2–11（1440 で 929px）。名前付き列線 content-start / content-end。
+    text    … 本文。content の左端から max-width（--measure 36em / --measure-lead 34em）で止める。
+  12列グリッドを PC で使うので、数字の列指定（cols 7–12 = grid-column: 7 / 13）はそのまま使える。
+  content を subgrid で受ける箱の中では、列番号が AD の表記より 1 小さくなる（AD の cols 2–11 → subgrid の 1–10）。
+*/
+
+/* ---------------------------------------------------------
+   Tailwind へのトークン登録（AD §2.9 末尾）
+--------------------------------------------------------- */
+@theme {
+  --color-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+  --inset-shadow-*: initial;
+  --drop-shadow-*: initial;
+}
+
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-deep: var(--paper-deep);
+  --color-sheet: var(--sheet);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-rule: var(--rule);
+  --color-accent: var(--accent);
+  --color-on-ink: var(--on-ink);
+  --color-on-ink-2: var(--on-ink-2);
+  --color-accent-on-ink: var(--accent-on-ink);
+  --color-rule-on-ink: var(--rule-on-ink);
+}
+
+/* ---------------------------------------------------------
+   トークン（AD §2.9 / AD v2 §1.2・§2）
+--------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  /* color */
+  --paper: #f4f0e8;
+  --paper-deep: #e9e2d5;
+  --sheet: #fbfaf6;
+  --ink: #26231f;
+  --ink-2: #4d4841;
+  --ink-3: #6a635a;
+  --rule: #cfc6b8;
+  --accent: #8c4127;
+  --on-ink: #f4f0e8;
+  --on-ink-2: #b8afa2;
+  --accent-on-ink: #d8a07e;
+  --rule-on-ink: #4a453e;
+  --photo-bg: #e9e2d5;
+  --focus: var(--accent);
+
+  /* font（--font-newsreader は layout.tsx の next/font が html に定義する） */
+  --font-latin: var(--font-newsreader), "Times New Roman", serif;
+  --font-ja: "Zen Kaku Gothic New", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "YuGothic",
+    "Noto Sans JP", sans-serif;
+  --font-ja-serif: var(--font-newsreader), "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", "YuMincho",
+    "Noto Serif JP", serif;
+  /* 「×」だけ Newsreader の小さく低い字形を避けて Shippori にする（AD v2 §3.5） */
+  --font-ja-serif-times: "Shippori Mincho", "Hiragino Mincho ProN", "Yu Mincho", "YuMincho", "Noto Serif JP", serif;
+
+  /* type */
+  --fs-name: clamp(4rem, 1.6rem + 5vw, 5.5rem);
+  --fs-name-sm: clamp(1.875rem, 9vw, 2.5rem); /* HERO の名前（モバイル）。390px で1行（約35px） */
+  --fs-hero-name: clamp(2.75rem, 1.4rem + 3.4vw, 4.25rem); /* HERO の名前（768px〜）。1440px で68px。詳細ページの h1 は --fs-name のまま */
+  --fs-page-sm: clamp(2.5rem, 12vw, 3rem);
+  --fs-title: clamp(1.0625rem, 0.95rem + 0.55vw, 1.375rem);
+  --fs-display-ja: clamp(1.625rem, 1.15rem + 2vw, 2.5rem);
+  --fs-quote-ja: clamp(1.3125rem, 1.05rem + 1.15vw, 1.875rem);
+  --fs-lead-ja: clamp(1.1875rem, 1rem + 0.8vw, 1.625rem);
+  --fs-h3-lead: clamp(1.75rem, 1.2rem + 2.1vw, 2.75rem);
+  --fs-h3-en: clamp(1.375rem, 1.1rem + 0.75vw, 1.875rem);
+  --fs-project-en: clamp(2rem, 1.4rem + 2.4vw, 3.5rem);
+  --fs-keyword-en: clamp(1.25rem, 1.05rem + 0.85vw, 1.875rem);
+  --fs-link-en: clamp(1.375rem, 1.15rem + 0.9vw, 1.875rem);
+  --fs-lead: clamp(1rem, 0.93rem + 0.3vw, 1.125rem);
+  --fs-body: clamp(0.9375rem, 0.9rem + 0.16vw, 1rem);
+  --fs-body-sm: 0.875rem;
+  --fs-small: 0.8125rem;
+  --fs-caption: 0.875rem;
+  --fs-label: 0.8125rem;
+  --fs-wordmark: 1.125rem;
+
+  /* space */
+  --space-L: clamp(96px, 60px + 7vw, 160px);
+  --space-M: clamp(72px, 48px + 4.5vw, 112px);
+  --space-S: clamp(56px, 40px + 3vw, 80px);
+  --space-head: clamp(32px, 20px + 3vw, 64px);
+  --col-gap: 16px; /* <768 */
+  --header-h: 48px; /* <640 */
+
+  /* width（AD v2 §1.2）。--pad は旧 --gutter、--w-visual は旧 --container */
+  --pad: clamp(20px, 6.4vw - 4px, 96px); /* ページ左右の最小余白 */
+  --w-visual: 1120px; /* 写真・ビジュアルの最大幅 */
+  --measure: 36em; /* 本文（ゴシック 15–16px）= 34字 */
+  --measure-lead: 34em; /* ゴシックのリード（18px）= 32字 */
+}
+@media (min-width: 640px) {
+  :root {
+    --header-h: 64px;
+  }
+}
+@media (min-width: 768px) {
+  :root {
+    --col-gap: 20px;
+  }
+}
+@media (min-width: 1024px) {
+  :root {
+    --col-gap: 24px;
+  }
+}
+
+/* ---------------------------------------------------------
+   基本
+--------------------------------------------------------- */
+html {
+  background: var(--paper);
+  color: var(--ink);
+  font-synthesis: none;
+  -webkit-text-size-adjust: 100%;
+  /* sticky ヘッダーの下に着地させる（スキップリンク・ナビ・フォーカス移動すべて）。
+     .sec の scroll-margin-top と加算されるので、そちらは 24px だけにしてある */
+  scroll-padding-top: var(--header-h);
+}
+body {
+  /* 中身が短いページ（404）でもフッターを画面下端に付ける（VQA-09）。main が残りの高さを埋める */
+  display: flex;
+  flex-direction: column;
+  min-height: 100svh;
+  font-family: var(--font-ja);
+  font-size: var(--fs-body);
+  line-height: 1.95;
+  letter-spacing: 0.04em;
+  font-kerning: normal;
+  text-autospace: ideograph-alpha ideograph-numeric;
+}
+main {
+  flex: 1 0 auto;
+}
+h1,
+h2,
+h3,
+h4 {
+  font-weight: 400;
+  margin: 0;
+}
+::selection {
+  background: var(--accent);
+  color: var(--paper);
+}
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 4px;
+  border-radius: 0;
+}
+
+/* スキップリンク（フォーカスされたときだけ見える） */
+.skip {
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+.skip:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.skip:focus {
+  position: fixed;
+  top: 8px;
+  left: 8px;
+  z-index: 100;
+  background: var(--paper);
+  color: var(--ink);
+  padding: 8px 12px;
+  outline: 2px solid var(--accent);
+  outline-offset: 0;
+}
+
+/* ---------------------------------------------------------
+   共通部品
+--------------------------------------------------------- */
+
+/* 外枠 = visual 幅。class 名は変えない（404 ページ・Tailwind の .container との衝突回避） */
+.container {
+  max-width: none; /* Tailwind の .container ユーティリティ（max-width: 40rem など）を打ち消す */
+  width: min(var(--w-visual), 100% - 2 * var(--pad));
+  margin-inline: auto;
+}
+
+/*
+  4列（モバイル）/ 8列（タブレット）/ 12列（PC）。
+  名前付きの列線: visual-start / visual-end（外枠の両端）、content-start / content-end（content 幅の両端）。
+  モバイルとタブレットでは content = visual。PC では visual の cols 2–11 が content。
+*/
+.grid {
+  display: grid;
+  column-gap: var(--col-gap);
+  grid-template-columns: [visual-start content-start] repeat(4, minmax(0, 1fr)) [content-end visual-end];
+}
+@media (min-width: 768px) {
+  .grid {
+    grid-template-columns: [visual-start content-start] repeat(8, minmax(0, 1fr)) [content-end visual-end];
+  }
+}
+@media (min-width: 1024px) {
+  .grid {
+    grid-template-columns:
+      [visual-start] minmax(0, 1fr)
+      [content-start] repeat(10, minmax(0, 1fr))
+      [content-end] minmax(0, 1fr) [visual-end];
+  }
+}
+
+/* 列を使わない content 幅の箱（404 ページ・詳細ページの末尾）。PC では visual の cols 2–11 の幅 = (5V − gap) / 6 */
+.container--content {
+  width: min(var(--w-visual), 100% - 2 * var(--pad));
+  margin-inline: auto;
+}
+@media (min-width: 1024px) {
+  .container--content {
+    width: calc((5 * min(var(--w-visual), 100% - 2 * var(--pad)) - var(--col-gap)) / 6);
+  }
+}
+
+/* セクション: 前の余白は各セクションの margin-top。上罫とラベルは h2（.sec__head）に引く */
+.sec {
+  scroll-margin-top: 24px; /* ヘッダー分は html の scroll-padding-top */
+}
+.sec__head {
+  grid-column: content;
+  grid-row: 1;
+  border-top: 1px solid var(--ink);
+  padding-top: 16px;
+}
+/* 帯（sheet / ink）の中にはセクション上罫を引かない（AD §2.7） */
+.band-sheet .sec__head,
+.band-ink .sec__head {
+  border-top: 0;
+  padding-top: 0;
+}
+/* 404 ページ用の上罫（container--content と併用） */
+.sec__inner {
+  border-top: 1px solid var(--ink);
+  padding-top: 16px;
+}
+
+/* 英字ラベル（欄名） */
+.label {
+  font-family: var(--font-latin);
+  font-size: var(--fs-label);
+  line-height: 1.4;
+  letter-spacing: 0.14em;
+  color: var(--ink-2);
+}
+.label--on-ink {
+  color: var(--on-ink-2);
+}
+
+/* 和文見出しを持つ h2（事業内容 / CONTACT）: ラベル＋和文見出し（それぞれ block） */
+.sec-heading > .label {
+  display: block;
+}
+.heading-ja {
+  display: block;
+  margin-top: var(--space-head);
+  font-family: var(--font-ja-serif);
+  font-weight: 500;
+  line-height: 1.6;
+  word-break: auto-phrase;
+  text-wrap: balance;
+}
+
+/* 明朝スタックの中の「×」（AD v2 §3.5） */
+.times {
+  font-family: var(--font-ja-serif-times);
+}
+
+/* 本文: ラグ右・禁則 strict・孤立行を避ける */
+.prose p {
+  max-width: var(--measure);
+  font-size: var(--fs-body);
+  line-height: 1.95;
+  line-break: strict;
+  text-wrap: pretty;
+  overflow-wrap: normal;
+}
+.prose p + p {
+  margin-top: 1em;
+}
+/* 本文すべてに文節改行（語の途中で折り返さない）。非対応ブラウザは line-break: strict のまま */
+main p,
+footer p,
+.hero__lead,
+.about__lead,
+.contact__body {
+  word-break: auto-phrase;
+}
+
+/* テキストリンク（下線は accent） */
+.link {
+  color: var(--ink);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+}
+.link:hover {
+  text-decoration-thickness: 2px;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .link {
+    transition:
+      text-decoration-color 150ms ease,
+      text-decoration-thickness 150ms ease;
+  }
+}
+/* 原稿に含まれる矢印（「詳細を見る →」「← トップへ戻る」）。inline-block にして下線を矢印にかけない。
+   line-height: 1 で矢印の箱を行ボックスの中に収め、リンクのフォーカスリングを矩形のままにする（A11Y-2） */
+.arrow {
+  display: inline-block;
+  margin-left: 0.4em;
+  line-height: 1;
+  vertical-align: baseline;
+}
+.arrow--before {
+  margin-left: 0;
+  margin-right: 0.4em;
+}
+
+/* 追い込み組み（WHAT I DO / PROJECT のタグ / OUTSIDE）: li を inline にして、li の間の空白で改行する */
+.run li {
+  display: inline;
+  white-space: nowrap;
+}
+.run li:not(:last-child)::after {
+  content: "/";
+  content: "/" / ""; /* 読み上げでは区切りを読ませない（対応ブラウザ） */
+  margin-inline: 0.55em;
+  color: var(--ink-3);
+}
+
+/* 写真（AD §3.7） */
+.photo {
+  max-width: var(--photo-max, none);
+}
+.photo__frame {
+  aspect-ratio: var(--ar);
+  overflow: hidden;
+  background: var(--photo-bg);
+}
+.photo__frame picture {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.photo__frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: var(--op);
+}
+.photo figcaption {
+  margin-top: 12px;
+  font-family: var(--font-latin);
+  font-style: italic;
+  font-size: var(--fs-caption);
+  line-height: 1.5;
+  letter-spacing: 0.01em;
+  color: var(--ink-3);
+}
+@media (min-width: 768px) {
+  .photo__frame {
+    aspect-ratio: var(--ar-md, var(--ar));
+  }
+  .photo__frame img {
+    object-position: var(--op-md, var(--op));
+  }
+}
+@media (min-width: 1024px) {
+  .photo__frame {
+    aspect-ratio: var(--ar-lg, var(--ar-md, var(--ar)));
+  }
+  .photo__frame img {
+    object-position: var(--op-lg, var(--op-md, var(--op)));
+  }
+}
+
+/* 黒帯 / 白帯（背景だけ全幅。中身は同じコンテナ） */
+.band-ink {
+  --focus: var(--accent-on-ink);
+  background: var(--ink);
+  color: var(--on-ink);
+}
+.band-sheet {
+  margin-top: var(--space-L);
+  padding-block: var(--space-M);
+  background: var(--sheet);
+}
+.band-sheet--text-only {
+  padding-block: var(--space-S);
+}
+
+/*
+  仕様行（ルールで区切った「項目名 | 説明」の行）。事業内容の Amazon 3項目と詳細ページの WHAT I DO で共通。
+  ul > li.spec__row > (.spec__name, .spec__text, .spec__note?)
+*/
+.spec {
+  grid-column: content;
+  grid-template-columns: subgrid;
+  display: grid;
+}
+.spec__row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  border-top: 1px solid var(--rule);
+  padding-block: 16px;
+  align-items: baseline;
+}
+.spec__name {
+  grid-column: 1 / -1;
+  font-size: 1rem;
+  line-height: 1.7;
+  text-wrap: balance;
+}
+.spec__text {
+  grid-column: 1 / -1;
+  max-width: var(--measure);
+  margin-top: 4px;
+  font-size: var(--fs-body);
+  line-height: 1.95;
+  line-break: strict;
+  text-wrap: pretty;
+}
+.spec__note {
+  grid-column: 1 / -1;
+  max-width: var(--measure);
+  margin-top: 12px;
+  font-size: var(--fs-small);
+  line-height: 1.8;
+  color: var(--ink-3);
+}
+@media (min-width: 768px) {
+  .spec__row {
+    padding-block: 18px;
+  }
+  .spec__name {
+    font-size: var(--fs-lead);
+  }
+  .spec__text {
+    grid-column: 1 / 8;
+    margin-top: 6px;
+  }
+  .spec__note {
+    grid-column: 1 / 8;
+  }
+}
+@media (min-width: 1024px) {
+  .spec__row {
+    padding-block: 20px;
+  }
+  .spec__name {
+    grid-column: 1 / 5;
+  }
+  .spec__text {
+    grid-column: 5 / 11;
+    grid-row: 1;
+    margin-top: 0;
+  }
+  .spec__note {
+    grid-column: 5 / 11;
+    grid-row: 2;
+    margin-top: 16px;
+  }
+}
+
+/* ---------------------------------------------------------
+   Reveal（AD §6）。隠すのは <html class="reveal-on"> のときだけ
+   （JS 有効かつ reduced-motion でないとき。head のスクリプトが付ける）
+--------------------------------------------------------- */
+.reveal-on .reveal,
+.reveal-on .reveal-photo {
+  transition-property: opacity, transform;
+  transition-duration: 700ms;
+  transition-timing-function: cubic-bezier(0.2, 0.7, 0.2, 1);
+  transition-delay: var(--reveal-delay, 0ms);
+}
+.reveal-on .reveal:not(.is-in) {
+  opacity: 0;
+  transform: translateY(16px);
+}
+.reveal-on .reveal--item {
+  transition-duration: 600ms;
+}
+.reveal-on .reveal--item:not(.is-in) {
+  transform: translateY(12px);
+}
+.reveal-on .reveal-photo {
+  transition-duration: 900ms;
+  transition-timing-function: cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.reveal-on .reveal-photo:not(.is-in) {
+  opacity: 0;
+}
+@media print {
+  .reveal,
+  .reveal-photo {
+    opacity: 1 !important;
+    transform: none !important;
+  }
+}
+
+/* ---------------------------------------------------------
+   ヘッダー / ナビ（AD §3.1）。中身は .container（visual）
+--------------------------------------------------------- */
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: var(--paper);
+  border-bottom: 1px solid var(--rule);
+}
+.site-header__inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--header-h);
+}
+.site-header__name {
+  display: none;
+  font-family: var(--font-latin);
+  font-size: var(--fs-wordmark);
+  line-height: 1;
+  color: var(--ink);
+}
+/* HERO の h1 が画面内にある間は隠す（JS 有効時のみ。JS が無ければ常に表示） */
+.js .site-header__name {
+  visibility: hidden;
+  opacity: 0;
+}
+.js .site-header__name.is-visible {
+  visibility: visible;
+  opacity: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .site-header__name {
+    transition:
+      opacity 200ms ease,
+      visibility 200ms;
+  }
+}
+.site-header__nav {
+  flex: 1;
+}
+.site-header__nav ul {
+  display: flex;
+  justify-content: space-between;
+}
+.site-header__link {
+  display: block;
+  padding-block: 15px;
+  /* 当たり判定とフォーカスリングを左右に 8px 広げる。負の margin で文字の位置は変えない（A11Y-1） */
+  padding-inline: 8px;
+  margin-inline: -8px;
+  font-family: var(--font-latin);
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: 0.08em;
+  color: var(--ink);
+}
+@media (max-width: 359px) {
+  .site-header__link {
+    letter-spacing: 0.04em;
+  }
+}
+/* ヘッダーのリンクは帯の高さいっぱいの箱なので、正の offset だとリングが閉じない（AD §2 の例外） */
+.site-header__link:focus-visible {
+  outline-offset: -4px;
+}
+.site-header__link:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 6px;
+}
+@media (min-width: 640px) {
+  .site-header__name {
+    display: block;
+  }
+  .site-header__nav {
+    flex: none;
+  }
+  .site-header__nav ul {
+    gap: 28px;
+  }
+  .site-header__link {
+    padding-block: 22px;
+    font-size: var(--fs-label);
+    letter-spacing: 0.14em;
+  }
+}
+@media (min-width: 1024px) {
+  .site-header__nav ul {
+    gap: 36px;
+  }
+}
+
+/* ---------------------------------------------------------
+   フッター（AD §3.6）。中身は .container（visual）
+--------------------------------------------------------- */
+.site-footer {
+  background: var(--paper-deep);
+  padding-block: 32px;
+}
+.site-footer__inner,
+.site-footer__right {
+  display: flex;
+  flex-direction: column-reverse; /* モバイル: Back to top → Cona 表記 → © の順に積む */
+  gap: 12px;
+}
+.site-footer__inner {
+  align-items: flex-start;
+}
+.site-footer__right {
+  align-items: flex-start;
+}
+.site-footer__copy {
+  font-family: var(--font-latin);
+  font-size: var(--fs-label);
+  line-height: 1.4;
+  color: var(--ink-2);
+}
+.site-footer__credit {
+  font-family: var(--font-latin);
+  font-size: 12px;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  color: var(--ink-2);
+}
+.site-footer__top {
+  display: inline-block;
+  padding-block: 13px; /* タップ領域 44px */
+  margin-block: -13px; /* 見た目の位置は変えない */
+  font-family: var(--font-latin);
+  font-size: var(--fs-label);
+  line-height: 1.4;
+}
+/* タップ領域の padding の外にリングを出すと、モバイルでは下の Cona 表記に重なる */
+.site-footer__top:focus-visible {
+  outline-offset: 0;
+}
+@media (min-width: 768px) {
+  .site-footer {
+    padding-block: 40px;
+  }
+  .site-footer__inner {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .site-footer__right {
+    flex-direction: row;
+    align-items: baseline;
+    gap: 40px;
+  }
+}
+
+/* =========================================================
+   1. HERO（AD v2 §4.1）— 幅だけ変更。名前・肩書は visual 全幅、写真は cols 7–12
+========================================================= */
+.hero {
+  padding-top: 32px;
+}
+.hero__name {
+  grid-column: 1 / -1;
+  font-family: var(--font-latin);
+  font-size: var(--fs-name-sm);
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  white-space: nowrap; /* 全幅で1行（2026-10-03 本人指示） */
+}
+.hero__title {
+  grid-column: 1 / -1;
+  margin-top: 16px;
+  border-top: 1px solid var(--ink);
+  padding-top: 12px;
+  font-family: var(--font-latin);
+  font-style: italic;
+  font-size: var(--fs-title);
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  color: var(--ink-2);
+}
+.hero__photo {
+  grid-column: 1 / -1;
+  margin-top: 28px;
+}
+.hero__tagline {
+  grid-column: 1 / -1;
+  margin-top: 32px;
+  font-family: var(--font-ja-serif);
+  font-weight: 500;
+  font-size: var(--fs-display-ja);
+  line-height: 1.55;
+  letter-spacing: 0.06em;
+  text-spacing-trim: trim-start; /* 1行目が「「」で始まるので、行頭の括弧の空きを詰める */
+}
+.hero__tagline span {
+  display: inline-block; /* 読点の後で2行に分ける */
+}
+.hero__lead {
+  grid-column: 1 / -1;
+  margin-top: 20px;
+  font-size: var(--fs-lead);
+  line-height: 1.9;
+  line-break: strict;
+  text-wrap: pretty;
+}
+.hero__lead p + p {
+  margin-top: 8px;
+}
+@media (min-width: 768px) {
+  .hero {
+    padding-top: 48px;
+  }
+  .hero__name {
+    font-size: var(--fs-hero-name);
+    line-height: 1;
+  }
+  .hero__title {
+    margin-top: 20px;
+    padding-top: 14px;
+  }
+  .hero__photo {
+    grid-column: 3 / 9;
+    margin-top: 40px;
+  }
+  .hero__tagline {
+    grid-column: 1 / 9;
+    margin-top: 40px;
+  }
+  .hero__lead {
+    grid-column: 1 / 7;
+    margin-top: 24px;
+  }
+}
+@media (min-width: 1024px) {
+  .hero {
+    padding-top: 56px;
+  }
+  .hero__name {
+    grid-row: 1;
+  }
+  .hero__title {
+    grid-row: 2;
+  }
+  .hero__photo {
+    grid-column: 7 / 13;
+    grid-row: 3 / 5;
+    margin-top: 64px;
+    align-self: start;
+  }
+  .hero__tagline {
+    grid-column: 1 / 6;
+    grid-row: 3;
+    margin-top: 64px;
+  }
+  .hero__lead {
+    grid-column: 1 / 6;
+    grid-row: 4;
+    margin-top: 32px;
+  }
+}
+
+/* =========================================================
+   2. ABOUT ＋ BACKGROUND（AD v2 §4.2）
+========================================================= */
+.about {
+  margin-top: var(--space-M);
+}
+.about__lead {
+  grid-column: content;
+  max-width: var(--measure-lead);
+  margin-top: var(--space-head);
+  font-size: var(--fs-lead);
+  line-height: 1.9;
+  line-break: strict;
+  text-wrap: pretty;
+}
+.about__lead p + p {
+  margin-top: 1em; /* brief-v2 §A の空行 */
+}
+.about__photo {
+  grid-column: content;
+  width: 80%;
+  margin-top: 40px;
+  margin-left: auto;
+}
+.about__body {
+  grid-column: content;
+  margin-top: 40px;
+}
+/* BACKGROUND: ABOUT の脚注。罫線は rule 色、ラベルは本文の横、文字は 14px・ink-2 */
+.about__bg {
+  grid-column: content;
+  grid-template-columns: subgrid;
+  display: grid;
+  margin-top: 56px;
+  border-top: 1px solid var(--rule);
+  padding-top: 16px;
+}
+.about__bg-label {
+  grid-column: 1 / -1;
+}
+.about__bg-text {
+  grid-column: 1 / -1;
+  margin-top: 12px;
+  color: var(--ink-2);
+}
+.about__bg-text p {
+  max-width: var(--measure);
+  font-size: var(--fs-body-sm);
+  line-height: 1.9;
+  line-break: strict;
+  text-wrap: pretty;
+}
+.about__bg-text p + p {
+  margin-top: 0.75em;
+}
+@media (min-width: 768px) {
+  .about__lead {
+    grid-column: 1 / 8;
+    grid-row: 2;
+  }
+  .about__photo {
+    grid-column: 6 / 9;
+    grid-row: 4;
+    width: auto;
+    margin-top: 48px;
+    margin-left: 0;
+  }
+  .about__body {
+    grid-column: 1 / 6;
+    grid-row: 4;
+    margin-top: 48px;
+  }
+  .about__bg {
+    grid-row: 5;
+    margin-top: 80px;
+  }
+  .about__bg-text {
+    grid-column: 1 / 8;
+    margin-top: 16px;
+  }
+}
+@media (min-width: 1024px) {
+  .about__lead {
+    grid-column: 2 / 9;
+  }
+  .about__photo {
+    grid-column: 9 / 13;
+    grid-row: 3 / 5;
+    align-self: start;
+    margin-top: 56px; /* 本文（.about__body）の書き出しと上端を揃える */
+  }
+  .about__body {
+    grid-column: 2 / 9;
+    margin-top: 56px;
+  }
+  /* 中は subgrid（AD の cols 2–11 → 1–10）。ラベル cols 2–4、本文 cols 5–10 を同じ行に */
+  .about__bg-label {
+    grid-column: 1 / 4;
+  }
+  .about__bg-text {
+    grid-column: 4 / 10;
+    grid-row: 1;
+    margin-top: 0;
+  }
+}
+
+/* =========================================================
+   3. 事業内容 / WHAT I DO（AD v2 §4.3）
+   Amazon を大見出し＋3項目の仕様行、他3領域は罫線の索引行。説明文の左端（cols 6）を揃える
+========================================================= */
+.work {
+  margin-top: var(--space-L);
+}
+.work .heading-ja {
+  font-size: var(--fs-quote-ja);
+}
+.work__amazon {
+  grid-column: content;
+  grid-template-columns: subgrid;
+  display: grid;
+  margin-top: 40px;
+}
+.work__amazon-name {
+  grid-column: 1 / -1;
+  font-family: var(--font-ja-serif);
+  font-weight: 500;
+  font-size: var(--fs-h3-lead);
+  line-height: 1.2;
+  letter-spacing: 0.02em;
+  text-wrap: balance;
+}
+.work__amazon-lead {
+  grid-column: 1 / -1;
+  margin-top: 16px;
+  font-family: var(--font-ja-serif);
+  font-weight: 500;
+  font-size: var(--fs-lead-ja);
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  word-break: auto-phrase;
+  text-wrap: balance;
+}
+.work__points {
+  grid-column: 1 / -1;
+  margin-top: 32px;
+}
+.work__index {
+  grid-column: content;
+  grid-template-columns: subgrid;
+  display: grid;
+  margin-top: 56px;
+}
+.work__row {
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  display: grid;
+  border-top: 1px solid var(--rule);
+  padding-block: 20px;
+}
+.work__row:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+.work__name {
+  grid-column: 1 / -1;
+  font-family: var(--font-latin);
+  font-size: var(--fs-h3-en);
+  line-height: 1.15;
+  text-wrap: balance;
+}
+.work__body {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+}
+.work__lead {
+  max-width: var(--measure);
+  font-size: var(--fs-body);
+  line-height: 1.95;
+  line-break: strict;
+  text-wrap: balance; /* 1024 で「行います。」だけが孤立しないように（VQA-05） */
+}
+.work__lead + .work__lead {
+  margin-top: 1em; /* Regional の2段落（brief-v2 §B4 の空行） */
+}
+/* スラッシュ列: 補足の索引として 15px・ink-2（lead 文が加わったので v1 の 18px・ink から下げた） */
+.work__items {
+  margin-top: 8px;
+  font-size: 0.9375rem;
+  line-height: 1.8;
+  color: var(--ink-2);
+}
+@media (min-width: 768px) {
+  .work__amazon {
+    margin-top: 48px;
+  }
+  .work__amazon-lead {
+    grid-column: 1 / -1;
+  }
+  .work__points {
+    margin-top: 36px;
+  }
+  .work__index {
+    margin-top: 64px;
+  }
+  .work__row {
+    padding-block: 24px;
+  }
+  .work__body {
+    grid-column: 1 / 8;
+    margin-top: 10px;
+  }
+}
+@media (min-width: 1024px) {
+  .work__amazon {
+    margin-top: 56px;
+  }
+  .work__amazon-lead {
+    grid-column: 1 / 9;
+  }
+  .work__points {
+    margin-top: 40px;
+  }
+  .work__index {
+    margin-top: 72px;
+  }
+  .work__row {
+    padding-block: 28px;
+    align-items: baseline;
+  }
+  /* 他3領域の見出しは Amazon のリード（--fs-lead-ja）より小さく: 1024 で 22px → 1440 で 23px（D-03） */
+  .work__name {
+    grid-column: 1 / 5;
+    font-size: clamp(1.375rem, 1.1rem + 0.4vw, 1.5rem);
+  }
+  .work__body {
+    grid-column: 5 / 11;
+    margin-top: 0;
+  }
+}
+
+/* =========================================================
+   4. PROJECT — GUILD Farm（AD v2 §4.4）— sheet 帯。写真2枚を visual 幅の両端まで
+========================================================= */
+.project__intro {
+  grid-column: content;
+  grid-row: 1;
+}
+.project__head > span {
+  display: block;
+}
+.project__name {
+  margin-top: 12px;
+  font-family: var(--font-latin);
+  font-size: var(--fs-project-en);
+  line-height: 1.05;
+  letter-spacing: 0.02em;
+}
+.project__subtitle {
+  margin-top: 20px;
+  font-family: var(--font-ja-serif);
+  font-weight: 500;
+  font-size: var(--fs-lead-ja);
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  word-break: auto-phrase;
+  text-wrap: balance;
+}
+.project__tags {
+  margin-top: 12px;
+  font-family: var(--font-latin);
+  font-style: italic;
+  font-size: var(--fs-title);
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  color: var(--ink-2);
+}
+.project__main {
+  grid-column: content;
+  margin-top: 32px;
+}
+.project__sub {
+  grid-column: content;
+  width: 64%;
+  margin-top: 16px;
+  margin-left: auto;
+}
+.project__text {
+  grid-column: content;
+  margin-top: 32px;
+}
+.project__text .project__more {
+  margin-top: 28px;
+  font-size: 1rem;
+  line-height: 1.7;
+}
+@media (min-width: 768px) {
+  .project__main {
+    grid-column: 1 / 6;
+    grid-row: 2;
+    align-self: start;
+  }
+  .project__sub {
+    grid-column: 6 / 9;
+    grid-row: 2;
+    align-self: end;
+    width: auto;
+    margin-left: 0;
+  }
+  .project__text {
+    grid-column: 1 / 8;
+    grid-row: 3;
+    margin-top: 48px;
+  }
+  .project__text .project__more {
+    margin-top: 32px;
+  }
+  .project--only-sub .project__sub {
+    grid-column: 1 / 6;
+    align-self: start;
+    margin-top: 32px;
+  }
+}
+@media (min-width: 1024px) {
+  .project__subtitle {
+    max-width: 80%;
+  }
+  .project__main {
+    grid-column: 1 / 7;
+    margin-top: 64px;
+  }
+  .project__sub {
+    grid-column: 9 / 13;
+    margin-top: 64px;
+  }
+  .project__text {
+    grid-column: 2 / 9;
+    margin-top: 64px;
+  }
+  .project__text .project__more {
+    font-size: var(--fs-lead);
+  }
+  .project--only-sub .project__sub {
+    grid-column: 1 / 7;
+    margin-top: 64px;
+  }
+}
+/* モバイル: 「詳細を見る →」の当たり判定を上下に広げる（44px 前後）。見た目の位置は変えない（A11Y-7） */
+@media (max-width: 767px) {
+  .project__more .link {
+    display: inline-block;
+    padding-block: 10px;
+    margin-block: -10px;
+  }
+}
+/* 写真が両方とも非表示のとき: 写真の行を出さず、本文を見出し直下に */
+.project--no-photos .project__text {
+  margin-top: var(--space-head);
+}
+@media (min-width: 768px) {
+  .project--no-photos .project__text {
+    grid-row: 2;
+  }
+}
+
+/* =========================================================
+   5. HOW I WORK（AD v2 §4.5）— 黒帯。4行の目次組み。F-10（{" "} / ol role=list / .how__ja の margin-left）を維持
+========================================================= */
+.how {
+  margin-top: 0; /* PROJECT の sheet 帯に直接つなぐ */
+  padding-block: var(--space-M);
+}
+.how__list {
+  grid-column: content;
+  grid-template-columns: subgrid;
+  display: grid;
+  margin-top: var(--space-head);
+}
+.how__row {
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  display: grid;
+  border-top: 1px solid var(--rule-on-ink);
+  padding-block: 18px;
+}
+.how__row:last-child {
+  border-bottom: 1px solid var(--rule-on-ink);
+}
+.how__title {
+  grid-column: 1 / -1;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+.how__no {
+  margin-right: 16px;
+  font-family: var(--font-latin);
+  font-size: 14px;
+  letter-spacing: 0.1em;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--on-ink-2); /* 番号は控えめに。英字と和文の一対を主役にする（D-02） */
+}
+.how__en {
+  font-family: var(--font-latin);
+  font-size: var(--fs-h3-en);
+  letter-spacing: 0.06em;
+  color: var(--on-ink);
+}
+.how__ja {
+  margin-left: 0.55em; /* HowIWork.tsx の英字と和文の間に半角スペースが入る分 */
+  font-family: var(--font-ja-serif);
+  font-weight: 500;
+  font-size: 20px;
+  letter-spacing: 0.08em;
+  color: var(--on-ink); /* 英字と同じ色にして一対に読ませる（D-02） */
+}
+.how__text {
+  grid-column: 1 / -1;
+  margin-top: 8px;
+  font-size: var(--fs-body);
+  line-height: 1.9;
+  line-break: strict;
+  text-wrap: pretty;
+  color: var(--on-ink);
+}
+@media (min-width: 768px) {
+  .how__row {
+    padding-block: 20px;
+  }
+  .how__ja {
+    font-size: 22px;
+  }
+}
+@media (min-width: 1024px) {
+  .how__row {
+    padding-block: 22px;
+    align-items: baseline;
+  }
+  .how__title {
+    grid-column: 1 / 5;
+  }
+  /* PC: 英字と和文を同じ 24px にそろえる（D-02） */
+  .how__en,
+  .how__ja {
+    font-size: 1.5rem;
+  }
+  .how__text {
+    grid-column: 5 / 11;
+    margin-top: 0;
+  }
+}
+
+/* =========================================================
+   6. INTERESTS（AD v2 §4.6）— 明朝リード1文＋ゴシック本文（文章一本）
+========================================================= */
+.interests {
+  margin-top: var(--space-L);
+}
+.interests__lead {
+  grid-column: content;
+  margin-top: var(--space-head);
+  font-family: var(--font-ja-serif);
+  font-weight: 500;
+  font-size: var(--fs-quote-ja);
+  line-height: 1.75;
+  letter-spacing: 0.04em;
+  word-break: auto-phrase;
+}
+.interests__lead span {
+  display: inline-block; /* 読点の後で折る */
+}
+/* span は inline-block なので span 自身にも balance を指定する（VQA-04） */
+.interests__lead,
+.interests__lead span {
+  text-wrap: balance;
+}
+/* 320: 「地域性のあるプロダクトや、」（13字）を1行に収める（21px × 13字 + 字間 0.04em が 280px を超えるため） */
+@media (max-width: 359px) {
+  .interests__lead {
+    letter-spacing: 0;
+  }
+}
+.interests__body {
+  grid-column: content;
+  max-width: var(--measure-lead);
+  margin-top: 24px;
+  font-size: var(--fs-lead);
+  line-height: 1.9;
+  line-break: strict;
+  text-wrap: pretty;
+}
+.interests__body p + p {
+  margin-top: 1em; /* brief-v2 §E の空行 */
+}
+@media (min-width: 768px) {
+  .interests__lead {
+    grid-column: 1 / 9;
+    grid-row: 2;
+  }
+  .interests__body {
+    grid-column: 2 / 9;
+    grid-row: 3;
+    margin-top: 40px;
+  }
+}
+@media (min-width: 1024px) {
+  .interests__lead {
+    grid-column: 2 / 10;
+  }
+  .interests__body {
+    grid-column: 4 / 11;
+  }
+}
+
+/* =========================================================
+   7. OUTSIDE OF WORK（AD v2 §4.7）— 写真が visual の両端まで、テキストは content の左端
+========================================================= */
+.outside {
+  margin-top: var(--space-M);
+}
+.outside__main {
+  grid-column: content;
+  grid-row: 2;
+  margin-top: var(--space-head);
+}
+.outside__sub {
+  grid-column: 1 / 3;
+  grid-row: 3;
+  margin-top: 16px;
+}
+.outside__items {
+  grid-column: 3 / 5;
+  grid-row: 3;
+  align-self: end;
+  font-family: var(--font-latin);
+  font-style: italic;
+  font-size: 17px;
+  line-height: 1.55;
+  letter-spacing: 0.01em;
+}
+/* モバイル: 縦積み・スラッシュなし */
+.outside__items li {
+  display: block;
+  white-space: normal;
+}
+.outside__items li:not(:last-child)::after {
+  content: none;
+}
+@media (max-width: 359px) {
+  .outside__items {
+    font-size: 16px;
+  }
+  .outside__items li {
+    white-space: nowrap;
+  }
+}
+.outside__text {
+  grid-column: content;
+  grid-row: 4;
+  margin-top: 28px;
+}
+@media (min-width: 768px) {
+  .outside__main {
+    grid-column: 1 / 8;
+  }
+  .outside__sub {
+    grid-column: 5 / 9;
+    margin-top: 40px;
+  }
+  .outside__items {
+    grid-column: 1 / 5;
+    font-size: var(--fs-keyword-en);
+    line-height: 1.5;
+  }
+  .outside__items li {
+    display: inline;
+    white-space: nowrap;
+  }
+  .outside__items li:not(:last-child)::after {
+    content: "/";
+    content: "/" / "";
+  }
+  .outside__text {
+    grid-column: 1 / 7;
+    margin-top: 20px;
+  }
+}
+@media (min-width: 1024px) {
+  .outside__sub {
+    grid-column: 9 / 13;
+    grid-row: 2 / 4;
+    margin-top: calc(var(--space-head) + 96px);
+  }
+  .outside__items {
+    grid-column: 2 / 8;
+    align-self: auto;
+    margin-top: 40px;
+  }
+  .outside__text {
+    grid-column: 2 / 8;
+  }
+}
+
+/* =========================================================
+   8. CONTACT（AD v2 §4.8）— 幅だけ変更
+========================================================= */
+.contact {
+  margin-top: var(--space-L);
+  padding-bottom: var(--space-L);
+}
+.contact .heading-ja {
+  font-size: var(--fs-display-ja);
+  line-height: 1.55;
+  letter-spacing: 0.06em;
+}
+.contact__body {
+  grid-column: content;
+  grid-row: 2;
+  max-width: var(--measure-lead);
+  margin-top: 48px;
+  font-size: var(--fs-lead);
+  line-height: 1.9;
+  line-break: strict;
+  text-wrap: pretty;
+  text-spacing-trim: trim-start;
+}
+.contact__body p + p {
+  margin-top: 1em;
+}
+.contact__lines span {
+  display: block; /* 原稿の改行を保持 */
+}
+.contact__links {
+  grid-column: content;
+  grid-row: 3;
+  margin-top: 56px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  font-family: var(--font-latin);
+  font-size: var(--fs-link-en);
+  line-height: 1.3;
+}
+.contact__email {
+  grid-column: content;
+  grid-row: 4;
+  margin-top: 12px;
+  font-size: var(--fs-small);
+  line-height: 1.8;
+  color: var(--ink-2);
+  overflow-wrap: anywhere;
+}
+@media (min-width: 768px) {
+  .contact__body {
+    grid-column: 2 / 9;
+  }
+  .contact__links,
+  .contact__email {
+    grid-column: 2 / 9;
+  }
+  .contact__links {
+    gap: 16px 40px;
+  }
+}
+@media (min-width: 1024px) {
+  .contact__body {
+    grid-column: 4 / 11;
+  }
+  .contact__links,
+  .contact__email {
+    grid-column: 4 / 12;
+  }
+}
+
+/* =========================================================
+   詳細ページ /projects/guild-farm/（AD v2 §6）
+========================================================= */
+.detail-top {
+  padding-top: 32px;
+}
+.detail__label {
+  grid-column: content;
+}
+.detail__title {
+  grid-column: content;
+  margin-top: 12px;
+  font-family: var(--font-latin);
+  font-size: var(--fs-page-sm);
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+/* マストヘッド罫（content 幅）＋サブタイトル・概要 */
+.detail__lede {
+  grid-column: content;
+  grid-template-columns: subgrid;
+  display: grid;
+  margin-top: 16px;
+  border-top: 1px solid var(--ink);
+  padding-top: 20px;
+}
+.detail__subtitle {
+  grid-column: 1 / -1;
+  font-family: var(--font-ja-serif);
+  font-weight: 500;
+  font-size: var(--fs-quote-ja);
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+  word-break: auto-phrase;
+  text-wrap: balance;
+}
+.detail__desc {
+  grid-column: 1 / -1;
+  max-width: var(--measure-lead);
+  margin-top: 24px;
+  font-size: var(--fs-lead);
+  line-height: 1.9;
+  line-break: strict;
+  text-wrap: pretty;
+}
+/* 担当・期間 */
+.detail__meta {
+  grid-column: content;
+  grid-template-columns: subgrid;
+  display: grid;
+  margin-top: 40px;
+}
+.detail__meta-row {
+  grid-column: 1 / -1;
+  grid-template-columns: subgrid;
+  display: grid;
+  border-top: 1px solid var(--rule);
+  padding-block: 14px;
+  align-items: baseline;
+}
+.detail__meta-row:last-child {
+  border-bottom: 1px solid var(--rule);
+}
+.detail__meta dt {
+  grid-column: 1 / -1;
+  font-size: var(--fs-small);
+  line-height: 1.6;
+  letter-spacing: 0.08em;
+  color: var(--ink-2);
+}
+.detail__meta dd {
+  grid-column: 1 / -1;
+  max-width: var(--measure);
+  margin: 4px 0 0;
+  font-size: var(--fs-body);
+  line-height: 1.9;
+  line-break: strict;
+  word-break: auto-phrase;
+  text-wrap: pretty;
+}
+.detail__tags {
+  grid-column: content;
+  margin-top: 20px;
+  font-family: var(--font-latin);
+  font-style: italic;
+  font-size: var(--fs-title);
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  color: var(--ink-2);
+}
+/* WEB / CREATIVE / EVENT の各節。OVERVIEW の直後は他の節どうしと同じ間隔（space-M）でつなぐ
+   （WHAT I DO は 2026-10-03 本人指示で削除） */
+.detail__sec--web {
+  margin-top: var(--space-M);
+}
+.detail__text {
+  grid-column: content;
+  max-width: var(--measure-lead);
+  margin-top: var(--space-head);
+  font-size: var(--fs-lead);
+  line-height: 1.9;
+  line-break: strict;
+  text-wrap: pretty;
+}
+.detail__text + .detail__text {
+  margin-top: 1em;
+}
+/* EVENT 帯: 写真2枚が visual の両端まで */
+.detail__event-main {
+  grid-column: content;
+  margin-top: 32px;
+}
+.detail__event-sub {
+  grid-column: content;
+  margin-top: 16px;
+}
+/* 末尾の導線 */
+.detail__end {
+  display: flex;
+  flex-direction: column-reverse;
+  align-items: flex-start;
+  gap: 12px;
+  margin-top: var(--space-M);
+  border-top: 1px solid var(--ink);
+  padding-top: 20px;
+  padding-bottom: var(--space-L);
+}
+.detail__end-back {
+  font-size: 1rem;
+  line-height: 1.7;
+}
+/* モバイル: 「← トップへ戻る」の当たり判定を上下に広げる。見た目の位置は変えない（A11Y-7） */
+@media (max-width: 767px) {
+  .detail__end-back {
+    display: inline-block;
+    padding-block: 10px;
+    margin-block: -10px;
+  }
+}
+.detail__end-contact {
+  font-family: var(--font-latin);
+  font-size: var(--fs-link-en);
+  line-height: 1.3;
+}
+@media (min-width: 768px) {
+  .detail-top {
+    padding-top: 48px;
+  }
+  .detail__title {
+    font-size: var(--fs-name);
+  }
+  .detail__lede {
+    margin-top: 20px;
+  }
+  .detail__subtitle {
+    grid-column: 1 / 9;
+  }
+  .detail__desc {
+    grid-column: 1 / 8;
+    margin-top: 32px;
+  }
+  .detail__meta {
+    margin-top: 48px;
+  }
+  .detail__meta-row {
+    padding-block: 16px;
+  }
+  .detail__meta dt {
+    grid-column: 1 / 3;
+  }
+  .detail__meta dd {
+    grid-column: 3 / 9;
+    margin-top: 0;
+  }
+  .detail__text {
+    grid-column: 1 / 8;
+  }
+  .detail__event-main {
+    grid-column: 1 / 7;
+    grid-row: 3;
+    margin-top: 48px;
+  }
+  .detail__event-sub {
+    grid-column: 4 / 9;
+    grid-row: 4;
+    margin-top: 20px;
+  }
+  .detail__end {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: 16px 40px;
+  }
+}
+@media (min-width: 1024px) {
+  .detail-top {
+    padding-top: 56px;
+  }
+  .detail__subtitle {
+    grid-column: 1 / 9;
+  }
+  /* dt cols 2–5 / dd cols 6–11。dd の左端を WHAT I DO の spec__text（cols 6）に揃える（D-08） */
+  .detail__meta dt {
+    grid-column: 1 / 5;
+  }
+  .detail__meta dd {
+    grid-column: 5 / 11;
+  }
+  .detail__text {
+    grid-column: 2 / 9;
+  }
+  .detail__event-main {
+    grid-column: 1 / 7;
+    grid-row: 3;
+    margin-top: 64px;
+  }
+  .detail__event-sub {
+    grid-column: 8 / 13;
+    grid-row: 3;
+    align-self: end;
+    margin-top: 64px;
+    /* キャプションは写真の下にぶら下げ、2枚の写真の下端を揃える（キャプション 1行ぶんを相殺） */
+    margin-bottom: calc(-1 * (12px + 1.5 * var(--fs-caption)));
+  }
+  /* expo-booth が非表示で expo-talk だけのとき: cols 1–5（密度 1.35 を守る）に置き、下端の相殺もしない */
+  .detail__event-sub--solo {
+    grid-column: 1 / 6;
+    align-self: start;
+    margin-bottom: 0;
+  }
+}

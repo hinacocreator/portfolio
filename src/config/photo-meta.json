@@ -1,0 +1,61 @@
+{
+  "generatedBy": "scripts/images.mjs（npm run images）が自動生成。手で編集しないでください。",
+  "photos": {
+    "citrus-closeup": {
+      "sourceWidth": 730,
+      "sourceHeight": 982,
+      "width": 730,
+      "height": 982,
+      "aspect": 0.7434,
+      "outputWidths": [480, 730]
+    },
+    "seto-orchard": {
+      "sourceWidth": 738,
+      "sourceHeight": 846,
+      "width": 738,
+      "height": 846,
+      "aspect": 0.8723,
+      "outputWidths": [480, 738]
+    },
+    "field-crouch": {
+      "sourceWidth": 746,
+      "sourceHeight": 1042,
+      "width": 746,
+      "height": 1042,
+      "aspect": 0.7159,
+      "outputWidths": [480, 746]
+    },
+    "expo-booth": {
+      "sourceWidth": 768,
+      "sourceHeight": 1024,
+      "width": 768,
+      "height": 960,
+      "aspect": 0.8,
+      "outputWidths": [480, 768]
+    },
+    "expo-talk": {
+      "sourceWidth": 1024,
+      "sourceHeight": 768,
+      "width": 614,
+      "height": 768,
+      "aspect": 0.7995,
+      "outputWidths": [480, 614]
+    },
+    "cafe-table": {
+      "sourceWidth": 1182,
+      "sourceHeight": 665,
+      "width": 1142,
+      "height": 665,
+      "aspect": 1.7173,
+      "outputWidths": [480, 768, 1142]
+    },
+    "cafe-sofa": {
+      "sourceWidth": 1182,
+      "sourceHeight": 665,
+      "width": 1110,
+      "height": 665,
+      "aspect": 1.6692,
+      "outputWidths": [480, 768, 1110]
+    }
+  }
+}
