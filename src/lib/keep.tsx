@@ -14,6 +14,8 @@ export const KEEP_TERMS = [
   "PR・集客",
   "Experience Design",
   "携わった後、", // BACKGROUND（768・1280・1440 で「携わった｜後、」と折れるのを防ぐ）
+  "企画・制作", // 事業内容 Amazon「運用・改善」（1024・430 で「企画・｜制作」と折れるのを防ぐ。「コンテンツ企画・制作」は長い方が先に当たる）
+  "販売戦略を設計。", // 事業内容 Amazon「Amazon事業戦略」（1180 で「販売戦略を｜設計。」と述語だけ送られるのを防ぐ）
 ] as const;
 
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

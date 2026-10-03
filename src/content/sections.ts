@@ -82,7 +82,7 @@ type AreaBase = {
   lead: readonly string[];
 };
 
-/** 最上位・最も大きな領域（Amazon）。小項目3つ＋注記を持つ */
+/** Amazon の領域。小項目3つ＋注記を持つ（表示は他3領域と同じ番号付きの索引行。AD 改訂 v1.1） */
 export type AmazonArea = AreaBase & {
   id: "amazon";
   points: readonly { title: string; text: string }[];
@@ -99,7 +99,7 @@ export type StandardArea = AreaBase & {
 export type WhatIDoContent = SectionBase<"what-i-do"> & {
   /** 日本語の見出し（「事業内容」）。label は英字側（WHAT I DO） */
   heading: string;
-  /** 4領域。先頭が Amazon。カード並列にしない（Art Direction で表現を決める） */
+  /** 4領域（表示順 01〜04。番号は表示側で index から付ける）。先頭が Amazon。カード並列にしない */
   areas: readonly [AmazonArea, ...StandardArea[]];
 };
 
@@ -215,7 +215,7 @@ export const whatIDo: WhatIDoContent = {
   areas: [
     {
       id: "amazon",
-      name: "EC / Amazon販売支援",
+      name: "EC / Amazon運用",
       lead: ["ブランド事業全体を踏まえ、Amazon事業の戦略設計から日々の運用まで支援します。"],
       points: [
         {

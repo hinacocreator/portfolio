@@ -211,7 +211,7 @@ function briefLineToCopy(raw, sectionKey) {
   if (line.startsWith("### ")) {
     const h = line.replace(/^###\s+/, "");
     if (sectionKey === "A") return [h.split(/[:：]\s*/).pop().replace(/（.*）\s*$/, "").trim()]; // 「ABOUT 下部に少し小さく: BACKGROUND（2段落）」→ BACKGROUND
-    if (sectionKey === "B") return [h.replace(/^\d+\.\s*/, "").replace(/（.*）\s*$/, "").trim()]; // 「1. EC / Amazon販売支援（…）」
+    if (sectionKey === "B") return [h.replace(/^\d+\.\s*/, "").replace(/（.*）\s*$/, "").trim()]; // 「1. EC / Amazon運用（…）」
     return [h.trim()]; // §P の小見出し
   }
   if (line.startsWith("- ")) line = line.slice(2).trim();

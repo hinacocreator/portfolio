@@ -60,8 +60,9 @@ const gothicChars = uniqueChars([
 const minchoChars = uniqueChars([
   hero.tagline, // HERO 核メッセージ
   whatIDo.heading, // 事業内容 見出し
-  whatIDo.areas[0].name, // 事業内容 Amazon の大見出し
-  ...whatIDo.areas[0].lead, // 事業内容 Amazon のリード
+  // 事業内容 4領域の見出し（明朝スタック。欧文は Newsreader が出すので和文だけ。例「EC / Amazon運用」の「運用」）。
+  // リードはゴシック（AD 改訂 v1.1 で Amazon の明朝リードは廃止）
+  ...whatIDo.areas.map((a) => a.name.replace(/[\x20-\x7E]/g, "")),
   project.subtitle, // PROJECT サブタイトル
   projects["guild-farm"].overview.subtitle, // 詳細ページ サブタイトル
   ...howIWork.steps.map((s) => s.ja), // HOW I WORK の和文動詞

@@ -85,7 +85,6 @@
   --fs-display-ja: clamp(1.625rem, 1.15rem + 2vw, 2.5rem);
   --fs-quote-ja: clamp(1.3125rem, 1.05rem + 1.15vw, 1.875rem);
   --fs-lead-ja: clamp(1.1875rem, 1rem + 0.8vw, 1.625rem);
-  --fs-h3-lead: clamp(1.75rem, 1.2rem + 2.1vw, 2.75rem);
   --fs-h3-en: clamp(1.375rem, 1.1rem + 0.75vw, 1.875rem);
   --fs-project-en: clamp(2rem, 1.4rem + 2.4vw, 3.5rem);
   --fs-keyword-en: clamp(1.25rem, 1.05rem + 0.85vw, 1.875rem);
@@ -426,80 +425,6 @@ footer p,
 }
 .band-sheet--text-only {
   padding-block: var(--space-S);
-}
-
-/*
-  仕様行（ルールで区切った「項目名 | 説明」の行）。事業内容の Amazon 3項目と詳細ページの WHAT I DO で共通。
-  ul > li.spec__row > (.spec__name, .spec__text, .spec__note?)
-*/
-.spec {
-  grid-column: content;
-  grid-template-columns: subgrid;
-  display: grid;
-}
-.spec__row {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: subgrid;
-  border-top: 1px solid var(--rule);
-  padding-block: 16px;
-  align-items: baseline;
-}
-.spec__name {
-  grid-column: 1 / -1;
-  font-size: 1rem;
-  line-height: 1.7;
-  text-wrap: balance;
-}
-.spec__text {
-  grid-column: 1 / -1;
-  max-width: var(--measure);
-  margin-top: 4px;
-  font-size: var(--fs-body);
-  line-height: 1.95;
-  line-break: strict;
-  text-wrap: pretty;
-}
-.spec__note {
-  grid-column: 1 / -1;
-  max-width: var(--measure);
-  margin-top: 12px;
-  font-size: var(--fs-small);
-  line-height: 1.8;
-  color: var(--ink-3);
-}
-@media (min-width: 768px) {
-  .spec__row {
-    padding-block: 18px;
-  }
-  .spec__name {
-    font-size: var(--fs-lead);
-  }
-  .spec__text {
-    grid-column: 1 / 8;
-    margin-top: 6px;
-  }
-  .spec__note {
-    grid-column: 1 / 8;
-  }
-}
-@media (min-width: 1024px) {
-  .spec__row {
-    padding-block: 20px;
-  }
-  .spec__name {
-    grid-column: 1 / 5;
-  }
-  .spec__text {
-    grid-column: 5 / 11;
-    grid-row: 1;
-    margin-top: 0;
-  }
-  .spec__note {
-    grid-column: 5 / 11;
-    grid-row: 2;
-    margin-top: 16px;
-  }
 }
 
 /* ---------------------------------------------------------
@@ -907,8 +832,9 @@ footer p,
 }
 
 /* =========================================================
-   3. 事業内容 / WHAT I DO（AD v2 §4.3）
-   Amazon を大見出し＋3項目の仕様行、他3領域は罫線の索引行。説明文の左端（cols 6）を揃える
+   3. 事業内容 / WHAT I DO（AD v2 §4.3 → 改訂 v1.1「事業内容の統一」）
+   4領域を同じ構造の番号付き索引行で並べる。どれか1つだけを大きくしない。
+   行 = [番号＋見出し] | [リード → 小項目（スラッシュ列 / Amazon の3項目）→ 注記]。説明文の左端（cols 6）を全行で揃える
 ========================================================= */
 .work {
   margin-top: var(--space-L);
@@ -916,41 +842,11 @@ footer p,
 .work .heading-ja {
   font-size: var(--fs-quote-ja);
 }
-.work__amazon {
-  grid-column: content;
-  grid-template-columns: subgrid;
-  display: grid;
-  margin-top: 40px;
-}
-.work__amazon-name {
-  grid-column: 1 / -1;
-  font-family: var(--font-ja-serif);
-  font-weight: 500;
-  font-size: var(--fs-h3-lead);
-  line-height: 1.2;
-  letter-spacing: 0.02em;
-  text-wrap: balance;
-}
-.work__amazon-lead {
-  grid-column: 1 / -1;
-  margin-top: 16px;
-  font-family: var(--font-ja-serif);
-  font-weight: 500;
-  font-size: var(--fs-lead-ja);
-  line-height: 1.7;
-  letter-spacing: 0.04em;
-  word-break: auto-phrase;
-  text-wrap: balance;
-}
-.work__points {
-  grid-column: 1 / -1;
-  margin-top: 32px;
-}
 .work__index {
   grid-column: content;
   grid-template-columns: subgrid;
   display: grid;
-  margin-top: 56px;
+  margin-top: 40px;
 }
 .work__row {
   grid-column: 1 / -1;
@@ -962,12 +858,32 @@ footer p,
 .work__row:last-child {
   border-bottom: 1px solid var(--rule);
 }
-.work__name {
+/* 番号＋見出し。見出しが折れても2行目は見出しの左端に揃う（番号はぶら下げ） */
+.work__title {
   grid-column: 1 / -1;
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+/* 番号は HOW I WORK の .how__no と同じ扱い（Newsreader 14px・字間 0.1em・控えめな色）。paper 上の ink-3 = 5.2:1 */
+.work__no {
+  flex: none;
   font-family: var(--font-latin);
+  font-size: 14px;
+  line-height: 1;
+  letter-spacing: 0.1em;
+  font-variant-numeric: lining-nums tabular-nums;
+  color: var(--ink-3);
+}
+/* 4領域とも同じ書体・大きさ。和欧混植の「EC / Amazon運用」の「運用」は Shippori Mincho（明朝スタックの2番目）で出す */
+.work__name {
+  min-width: 0;
+  font-family: var(--font-ja-serif);
+  font-weight: 400;
   font-size: var(--fs-h3-en);
   line-height: 1.15;
   text-wrap: balance;
+  text-autospace: normal; /* 「Amazon｜運用」の和欧間を空ける（body の ideograph-alpha 指定は Chrome で無効値になるため。欧文だけの3見出しには効かない） */
 }
 .work__body {
   grid-column: 1 / -1;
@@ -983,25 +899,43 @@ footer p,
 .work__lead + .work__lead {
   margin-top: 1em; /* Regional の2段落（brief-v2 §B4 の空行） */
 }
-/* スラッシュ列: 補足の索引として 15px・ink-2（lead 文が加わったので v1 の 18px・ink から下げた） */
+/* 小項目: スラッシュ列（items）と Amazon の3項目（points）は同じ文字サイズ帯（15px・lh 1.8）で、補足の索引として扱う */
 .work__items {
   margin-top: 8px;
   font-size: 0.9375rem;
   line-height: 1.8;
   color: var(--ink-2);
 }
+.work__points {
+  max-width: var(--measure);
+  margin-top: 8px; /* スラッシュ列（.work__items）と同じ lead からの間隔 */
+  font-size: 0.9375rem;
+  line-height: 1.8;
+}
+.work__point + .work__point {
+  margin-top: 12px; /* 項目名と説明は同じ 15px で色だけで分けるので、項目どうしの間は広めに取ってまとまりを見せる */
+}
+.work__point-name {
+  color: var(--ink);
+  text-wrap: balance;
+}
+.work__point-text {
+  color: var(--ink-2);
+  line-break: strict;
+  text-wrap: pretty;
+}
+.work__note {
+  max-width: var(--measure);
+  margin-top: 16px;
+  font-size: var(--fs-small);
+  line-height: 1.8;
+  color: var(--ink-3);
+  line-break: strict;
+  text-wrap: balance; /* 1440 で「詳細な｜実績は」と折れないように */
+}
 @media (min-width: 768px) {
-  .work__amazon {
-    margin-top: 48px;
-  }
-  .work__amazon-lead {
-    grid-column: 1 / -1;
-  }
-  .work__points {
-    margin-top: 36px;
-  }
   .work__index {
-    margin-top: 64px;
+    margin-top: 48px;
   }
   .work__row {
     padding-block: 24px;
@@ -1012,25 +946,18 @@ footer p,
   }
 }
 @media (min-width: 1024px) {
-  .work__amazon {
-    margin-top: 56px;
-  }
-  .work__amazon-lead {
-    grid-column: 1 / 9;
-  }
-  .work__points {
-    margin-top: 40px;
-  }
   .work__index {
-    margin-top: 72px;
+    margin-top: 56px;
   }
   .work__row {
     padding-block: 28px;
     align-items: baseline;
   }
-  /* 他3領域の見出しは Amazon のリード（--fs-lead-ja）より小さく: 1024 で 22px → 1440 で 23px（D-03） */
-  .work__name {
+  /* 見出しは 1024 で 22px → 1440 で 23px（D-03）。4領域とも同じ */
+  .work__title {
     grid-column: 1 / 5;
+  }
+  .work__name {
     font-size: clamp(1.375rem, 1.1rem + 0.4vw, 1.5rem);
   }
   .work__body {
@@ -1673,7 +1600,7 @@ footer p,
   .detail__subtitle {
     grid-column: 1 / 9;
   }
-  /* dt cols 2–5 / dd cols 6–11。dd の左端を WHAT I DO の spec__text（cols 6）に揃える（D-08） */
+  /* dt cols 2–5 / dd cols 6–11。dd の左端を WHAT I DO の .work__body（cols 6）に揃える（D-08） */
   .detail__meta dt {
     grid-column: 1 / 5;
   }

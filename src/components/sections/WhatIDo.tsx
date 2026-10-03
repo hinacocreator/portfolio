@@ -1,44 +1,36 @@
 import { Fragment } from "react";
 import { whatIDo } from "@/content/sections";
-import { joinLines } from "@/lib/copy";
 import { KeepText } from "@/lib/keep";
 import { Reveal } from "@/components/ui/Reveal";
 import { SectionHeadingJa } from "@/components/ui/SectionHeading";
 
+/** 欧文だけの見出しか（lang="en" を付けるかどうか。「EC / Amazon運用」は和欧混植なので付けない） */
+const isLatinOnly = (text: string) => /^[\x20-\x7E]+$/.test(text);
+
 /**
- * 3. 事業内容 / WHAT I DO（AD v2 §4.3）。
- * 先頭の Amazon を最上位の大見出し（明朝 44px）＋方針の1文＋3項目の仕様行＋注記で見せ、
- * 他3領域は罫線で区切った索引行（見出し 28px・1文のリード・スラッシュ列）にとどめる。
- * カード・枠・背景色・番号・アイコンは使わない。説明文の左端（cols 6）は全行で揃える。
- * 他3領域の lead は1要素＝1段落（brief-v2 の空行どおり。Regional は2段落）。つながない。
+ * 3. 事業内容 / WHAT I DO（AD v2 §4.3 → 改訂 v1.1）。
+ * 4領域を同じ構造の番号付き索引行で並べる（どれか1つだけを大きくしない）。
+ *   行 = 番号（01〜04、配列の index から生成）＋見出し | リード → 小項目（スラッシュ列 or Amazon の3項目）→ 注記
+ * 番号は HOW I WORK（.how__no）と同じ扱い: Newsreader 14px・字間 0.1em・控えめな色・読み上げない（順序は <ol> が伝える）。
+ * カード・枠・背景色・アイコンは使わない。罫線と文字の大きさだけで区切る。
+ * lead は1要素＝1段落（brief-v2 の空行どおり。Regional は2段落）。つながない。
  */
 export function WhatIDo() {
-  const [amazon, ...others] = whatIDo.areas;
-
   return (
     <section id="work" className="sec work">
       <div className="container grid">
         <SectionHeadingJa label={whatIDo.label}>{whatIDo.heading}</SectionHeadingJa>
 
-        <Reveal className="work__amazon">
-          <h3 className="work__amazon-name">{amazon.name}</h3>
-          <p className="work__amazon-lead">{joinLines(amazon.lead)}</p>
-          <ul className="work__points spec" role="list">
-            {amazon.points.map((point, i) => (
-              <li key={point.title} className="spec__row">
-                <h4 className="spec__name">{point.title}</h4>
-                <p className="spec__text">{point.text}</p>
-                {i === amazon.points.length - 1 ? <p className="spec__note">{amazon.note}</p> : null}
-              </li>
-            ))}
-          </ul>
-        </Reveal>
-
-        <div className="work__index">
-          {others.map((area) => (
-            <Reveal key={area.id} className="work__row">
-              <h3 className="work__name" lang="en">
-                {area.name}
+        <ol className="work__index" role="list">
+          {whatIDo.areas.map((area, index) => (
+            <Reveal key={area.id} as="li" className="work__row">
+              <h3 className="work__title">
+                <span className="work__no" lang="en" aria-hidden="true">
+                  {String(index + 1).padStart(2, "0")}
+                </span>
+                <span className="work__name" lang={isLatinOnly(area.name) ? "en" : undefined}>
+                  {area.name}
+                </span>
               </h3>
               <div className="work__body">
                 {area.lead.map((line) => (
@@ -46,7 +38,7 @@ export function WhatIDo() {
                     <KeepText>{line}</KeepText>
                   </p>
                 ))}
-                {area.items ? (
+                {"items" in area && area.items ? (
                   <ul className="work__items run" role="list">
                     {area.items.map((item, i) => (
                       <Fragment key={item}>
@@ -56,10 +48,23 @@ export function WhatIDo() {
                     ))}
                   </ul>
                 ) : null}
+                {"points" in area ? (
+                  <ul className="work__points" role="list">
+                    {area.points.map((point) => (
+                      <li key={point.title} className="work__point">
+                        <h4 className="work__point-name">{point.title}</h4>
+                        <p className="work__point-text">
+                          <KeepText>{point.text}</KeepText>
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                ) : null}
+                {"note" in area ? <p className="work__note">{area.note}</p> : null}
               </div>
             </Reveal>
           ))}
-        </div>
+        </ol>
       </div>
     </section>
   );
